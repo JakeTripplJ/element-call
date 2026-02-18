@@ -19,7 +19,7 @@ import {
   LocalVideoTrack,
   type Participant,
   ParticipantEvent,
-  type RemoteParticipant,
+  RemoteParticipant,
   Track,
   TrackEvent,
   facingModeFromLocalTrack,
@@ -775,6 +775,64 @@ export class ScreenShareViewModel extends BaseMediaViewModel {
     this.pretendToBeDisconnected$.pipe(map((disconnected) => !disconnected)),
   );
 
+  // Check if the screen share has audio enabled
+  public readonly audioEnabled$ = this.scope.behavior(
+    this.participant$.pipe(
+      switchMap((p) =>
+        p ? observeTrackReference$(p, Track.Source.ScreenShareAudio) : of(null)
+      ),
+      map(Boolean),
+    ),
+  );
+
+  private readonly locallyMutedToggle$ = new Subject<void>();
+  private readonly localVolumeAdjustment$ = new Subject<number>();
+  private readonly localVolumeCommit$ = new Subject<void>();
+
+  /**
+   * The volume to which this participant's audio is set, as a scalar
+   * multiplier.
+   */
+  // Logic copied straight from RemoteUserMediaViewModel
+  // Could be relegated to a helper if it works reliably and doesn't need tweaks
+  public readonly localVolume$ = this.scope.behavior<number>(
+    merge(
+      this.locallyMutedToggle$.pipe(map(() => "toggle mute" as const)),
+      this.localVolumeAdjustment$,
+      this.localVolumeCommit$.pipe(map(() => "commit" as const)),
+    ).pipe(
+      accumulate({ volume: 1, committedVolume: 1 }, (state, event) => {
+        switch (event) {
+          case "toggle mute":
+            return {
+              ...state,
+              volume: state.volume === 0 ? state.committedVolume : 0,
+            };
+          case "commit":
+            // Dragging the slider to zero should have the same effect as
+            // muting: keep the original committed volume, as if it were never
+            // dragged
+            return {
+              ...state,
+              committedVolume:
+                state.volume === 0 ? state.committedVolume : state.volume,
+            };
+          default:
+            // Volume adjustment
+            return { ...state, volume: event };
+        }
+      }),
+      map(({ volume }) => volume),
+    ),
+  );
+
+  /**
+   * Whether this participant's audio is disabled.
+   */
+  public readonly locallyMuted$ = this.scope.behavior<boolean>(
+    this.localVolume$.pipe(map((volume) => volume === 0)),
+  );
+
   public constructor(
     scope: ObservableScope,
     id: string,
@@ -803,5 +861,38 @@ export class ScreenShareViewModel extends BaseMediaViewModel {
       displayName$,
       mxcAvatarUrl$,
     );
+
+    // Almost an exact copy of the relevant microphone audio logic
+    // just changed to check if there even is screen share audio first
+    // and also to modify the "ScreenShareAudio" track instead of "Microphone"
+    // Could be outsourced to a shared helper but wanted to keep the addition simple
+    if (this.audioEnabled$) {
+      combineLatest([
+        participant$,
+        this.pretendToBeDisconnected$.pipe(
+          switchMap((disconnected) => (disconnected ? of(0) : this.localVolume$)),
+          this.scope.bind(),
+        ),
+      ]).subscribe(([p, volume]) => {
+        // Make sure the participant isn't local
+        if (!(p instanceof RemoteParticipant)) return;
+        // Make sure you're subscribed and the participant has a ScreenShareAudio track
+        const publication = p.getTrackPublication(Track.Source.ScreenShareAudio);
+        if (!publication?.isSubscribed || !publication.track) return;
+        p.setVolume(volume, Track.Source.ScreenShareAudio);
+      });
+    }
+  }
+
+  public toggleLocallyMuted(): void {
+    this.locallyMutedToggle$.next();
+  }
+
+  public setLocalVolume(value: number): void {
+    this.localVolumeAdjustment$.next(value);
+  }
+
+  public commitLocalVolume(): void {
+    this.localVolumeCommit$.next();
   }
 }
