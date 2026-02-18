@@ -108,6 +108,36 @@ Please see LICENSE in the repository root for full details.
   z-index: 1;
 }
 
+.volumeContainer {
+  opacity: 0;
+  padding: var(--cpd-space-2x);
+  border: none;
+  border-radius: var(--cpd-radius-pill-effect);
+  background: rgba(from var(--cpd-color-gray-100) r g b / 0.6);
+  box-shadow: var(--small-drop-shadow);
+  transition:
+    opacity 0.15s,
+    background-color 0.1s;
+  z-index: 1;
+  --inset: 6px;
+  inset-block-end: var(--inset);
+  inset-inline-end: var(--inset);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+}
+
+@media (hover) {
+  .tile:hover .volumeContainer {
+    opacity: 1;
+  }
+}
+
+.volumeSlider {
+  width: 120px;
+}
+
 .expand > svg {
   display: block;
   color: var(--cpd-color-icon-primary);

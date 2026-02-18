@@ -20,6 +20,8 @@ import {
   CollapseIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  VolumeOffIcon,
+  VolumeOnIcon,
 } from "@vector-im/compound-design-tokens/assets/web/icons";
 import { animated } from "@react-spring/web";
 import { type Observable, map } from "rxjs";
@@ -46,6 +48,7 @@ import { useReactiveState } from "../useReactiveState";
 import { useLatest } from "../useLatest";
 import { type SpotlightTileViewModel } from "../state/TileViewModel";
 import { useBehavior } from "../useBehavior";
+import { Slider } from "../Slider";
 
 interface SpotlightItemBaseProps {
   ref?: Ref<HTMLDivElement>;
@@ -234,6 +237,12 @@ export const SpotlightTile: FC<Props> = ({
   const visibleIndex = media.findIndex((vm) => vm.id === visibleId);
   const canGoBack = visibleIndex > 0;
   const canGoToNext = visibleIndex !== -1 && visibleIndex < media.length - 1;
+  const currentMedia = media[visibleIndex];
+  const isScreenShare = currentMedia instanceof ScreenShareViewModel;
+  const hasAudio$ = useBehavior(currentMedia.audioEnabled$);
+  const screenShareLocallyMuted = isScreenShare ? useBehavior(currentMedia.locallyMuted$) : false;
+  const ScreenShareVolumeIcon = screenShareLocallyMuted ? VolumeOffIcon : VolumeOnIcon;
+  const screenShareVolume = isScreenShare ? useBehavior(currentMedia.localVolume$) : 0;
 
   const isFullscreen = useCallback((): boolean => {
     const rootElement = document.body;
@@ -340,6 +349,38 @@ export const SpotlightTile: FC<Props> = ({
         ))}
       </div>
       <div className={styles.bottomRightButtons}>
+        {/* Show volume slider only when the tile is a screenshare, has audio, and is in spotlight mode */}
+        {isScreenShare && hasAudio$ && onToggleExpanded && (
+          <div className={classNames(styles.volumeContainer)}>
+            <ScreenShareVolumeIcon
+              aria-hidden
+              cursor="pointer"
+              width={20}
+              height={20}
+              onPointerDown={() => currentMedia.toggleLocallyMuted()}
+            />
+            {
+              /*
+                Update the slider's "key" upon resizing the window to remake
+                the slider instead of reusing it, or else it bugs out
+                and becomes visually desynced (only the width matters)
+                Also onPointerUp is needed to actually commit the volume
+              */
+            }
+            <Slider
+              key={targetWidth}
+              label="Screen Share Volume"
+              value={screenShareVolume}
+              min={0}
+              max={1}
+              step={0.01}
+              onValueChange={(v) => currentMedia.setLocalVolume(v)}
+              onValueCommit={() => currentMedia.commitLocalVolume()}
+              className={classNames(styles.volumeSlider)}
+              onPointerUp={() => currentMedia.commitLocalVolume()}
+            />
+          </div>
+        )}
         <button
           className={classNames(styles.expand)}
           aria-label={"maximise"}
