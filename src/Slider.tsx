@@ -31,6 +31,7 @@ interface Props {
   max: number;
   step: number;
   disabled?: boolean;
+  onPointerUp?: React.PointerEventHandler<HTMLDivElement>;
 }
 
 /**
@@ -46,6 +47,7 @@ export const Slider: FC<Props> = ({
   max,
   step,
   disabled,
+  onPointerUp: onPointerUp,
 }) => {
   const onValueChange = useCallback(
     ([v]: number[]) => onValueChangeProp(v),
@@ -62,6 +64,7 @@ export const Slider: FC<Props> = ({
       value={[value]}
       onValueChange={onValueChange}
       onValueCommit={onValueCommit}
+      onPointerUp={onPointerUp}
       min={min}
       max={max}
       step={step}
