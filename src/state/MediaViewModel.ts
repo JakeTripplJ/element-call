@@ -19,7 +19,7 @@ import {
   LocalVideoTrack,
   type Participant,
   ParticipantEvent,
-  RemoteParticipant,
+  type RemoteParticipant,
   Track,
   TrackEvent,
   facingModeFromLocalTrack,
