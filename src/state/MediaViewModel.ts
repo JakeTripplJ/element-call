@@ -779,7 +779,7 @@ export class ScreenShareViewModel extends BaseMediaViewModel {
   public readonly audioEnabled$ = this.scope.behavior(
     this.participant$.pipe(
       switchMap((p) =>
-        p ? observeTrackReference$(p, Track.Source.ScreenShareAudio) : of(null)
+        p ? observeTrackReference$(p, Track.Source.ScreenShareAudio) : of(null),
       ),
       map(Boolean),
     ),
@@ -870,7 +870,9 @@ export class ScreenShareViewModel extends BaseMediaViewModel {
       combineLatest([
         participant$,
         this.pretendToBeDisconnected$.pipe(
-          switchMap((disconnected) => (disconnected ? of(0) : this.localVolume$)),
+          switchMap((disconnected) =>
+            disconnected ? of(0) : this.localVolume$,
+          ),
           this.scope.bind(),
         ),
       ]).subscribe(([p, volume]) => {

@@ -240,9 +240,15 @@ export const SpotlightTile: FC<Props> = ({
   const currentMedia = media[visibleIndex];
   const isScreenShare = currentMedia instanceof ScreenShareViewModel;
   const hasAudio$ = useBehavior(currentMedia.audioEnabled$);
-  const screenShareLocallyMuted = isScreenShare ? useBehavior(currentMedia.locallyMuted$) : false;
-  const ScreenShareVolumeIcon = screenShareLocallyMuted ? VolumeOffIcon : VolumeOnIcon;
-  const screenShareVolume = isScreenShare ? useBehavior(currentMedia.localVolume$) : 0;
+  const screenShareLocallyMuted = isScreenShare
+    ? useBehavior(currentMedia.locallyMuted$)
+    : false;
+  const ScreenShareVolumeIcon = screenShareLocallyMuted
+    ? VolumeOffIcon
+    : VolumeOnIcon;
+  const screenShareVolume = isScreenShare
+    ? useBehavior(currentMedia.localVolume$)
+    : 0;
 
   const isFullscreen = useCallback((): boolean => {
     const rootElement = document.body;
@@ -359,14 +365,12 @@ export const SpotlightTile: FC<Props> = ({
               height={20}
               onPointerDown={() => currentMedia.toggleLocallyMuted()}
             />
-            {
-              /*
+            {/*
                 Update the slider's "key" upon resizing the window to remake
                 the slider instead of reusing it, or else it bugs out
                 and becomes visually desynced (only the width matters)
                 Also onPointerUp is needed to actually commit the volume
-              */
-            }
+              */}
             <Slider
               key={targetWidth}
               label="Screen Share Volume"
