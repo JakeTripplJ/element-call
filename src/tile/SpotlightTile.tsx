@@ -49,6 +49,7 @@ import { useLatest } from "../useLatest";
 import { type SpotlightTileViewModel } from "../state/TileViewModel";
 import { useBehavior } from "../useBehavior";
 import { Slider } from "../Slider";
+import { constant } from "../state/Behavior";
 
 interface SpotlightItemBaseProps {
   ref?: Ref<HTMLDivElement>;
@@ -240,15 +241,15 @@ export const SpotlightTile: FC<Props> = ({
   const currentMedia = media[visibleIndex];
   const isScreenShare = currentMedia instanceof ScreenShareViewModel;
   const hasAudio$ = useBehavior(currentMedia.audioEnabled$);
-  const screenShareLocallyMuted = isScreenShare
-    ? useBehavior(currentMedia.locallyMuted$)
-    : false;
+  const screenShareLocallyMuted = useBehavior(
+    isScreenShare ? currentMedia.locallyMuted$ : constant(false),
+  );
   const ScreenShareVolumeIcon = screenShareLocallyMuted
     ? VolumeOffIcon
     : VolumeOnIcon;
-  const screenShareVolume = isScreenShare
-    ? useBehavior(currentMedia.localVolume$)
-    : 0;
+  const screenShareVolume = useBehavior(
+    isScreenShare ? currentMedia.localVolume$ : constant(0),
+  );
 
   const isFullscreen = useCallback((): boolean => {
     const rootElement = document.body;

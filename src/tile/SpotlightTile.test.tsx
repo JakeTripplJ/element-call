@@ -9,6 +9,7 @@ import { test, expect, vi } from "vitest";
 import { isInaccessible, render, screen } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import userEvent from "@testing-library/user-event";
+import { TooltipProvider } from "@vector-im/compound-web";
 
 import { SpotlightTile } from "./SpotlightTile";
 import {
@@ -22,7 +23,6 @@ import {
 } from "../utils/test";
 import { SpotlightTileViewModel } from "../state/TileViewModel";
 import { constant } from "../state/Behavior";
-import { TooltipProvider } from "@vector-im/compound-web";
 
 global.IntersectionObserver = class MockIntersectionObserver {
   public observe(): void {}
@@ -30,10 +30,10 @@ global.IntersectionObserver = class MockIntersectionObserver {
 } as unknown as typeof IntersectionObserver;
 
 global.ResizeObserver = class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-} as any;
+  public observe(): void {}
+  public unobserve(): void {}
+  public disconnect(): void {}
+};
 
 test("SpotlightTile is accessible", async () => {
   const vm1 = createRemoteMedia(
