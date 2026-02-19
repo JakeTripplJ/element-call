@@ -14,7 +14,7 @@ import {
   roomEventSelector,
 } from "@livekit/components-core";
 import {
-  type LocalParticipant,
+  LocalParticipant,
   LocalTrack,
   LocalVideoTrack,
   type Participant,
@@ -875,11 +875,9 @@ export class ScreenShareViewModel extends BaseMediaViewModel {
         ),
       ]).subscribe(([p, volume]) => {
         // Make sure the participant isn't local
-        if (!(p instanceof RemoteParticipant)) return;
-        // Make sure you're subscribed and the participant has a ScreenShareAudio track
-        const publication = p.getTrackPublication(Track.Source.ScreenShareAudio);
-        if (!publication?.isSubscribed || !publication.track) return;
-        p.setVolume(volume, Track.Source.ScreenShareAudio);
+        if (!(p instanceof LocalParticipant)) {
+          p.setVolume(volume, Track.Source.ScreenShareAudio);
+        }
       });
     }
   }

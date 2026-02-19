@@ -55,6 +55,7 @@ import { type CallMembershipIdentityParts } from "matrix-js-sdk/lib/matrixrtc/En
 import {
   LocalUserMediaViewModel,
   RemoteUserMediaViewModel,
+  ScreenShareViewModel,
 } from "../state/MediaViewModel";
 import { E2eeType } from "../e2ee/e2eeType";
 import {
@@ -392,6 +393,36 @@ export function createRemoteMedia(
     constant(member.getMxcAvatarUrl()),
     constant(null),
     constant(null),
+  );
+}
+
+export function createScreenShareMedia(
+  rtcMember: CallMembership,
+  roomMember: Partial<RoomMember>,
+  participant: RemoteParticipant,
+  livekitRoom: LivekitRoom | undefined = mockLivekitRoom(
+    {},
+    {
+      remoteParticipants$: of(participant ? [participant] : []),
+    },
+  ),
+): ScreenShareViewModel {
+  const member = mockMatrixRoomMember(rtcMember, roomMember);
+  return new ScreenShareViewModel(
+    testScope(),
+    "screenshare",
+    member.userId,
+    rtcMember.rtcBackendIdentity,
+    constant(participant),
+    {
+      kind: E2eeType.PER_PARTICIPANT,
+    },
+    constant(livekitRoom),
+    constant("https://rtc-example.org"),
+    constant(false),
+    constant(member.rawDisplayName ?? "nodisplayname"),
+    constant(member.getMxcAvatarUrl()),
+    false,
   );
 }
 
