@@ -240,7 +240,9 @@ export const SpotlightTile: FC<Props> = ({
   const canGoToNext = visibleIndex !== -1 && visibleIndex < media.length - 1;
   const currentMedia = media[visibleIndex];
   const isScreenShare = currentMedia instanceof ScreenShareViewModel;
-  const hasAudio$ = useBehavior(currentMedia.audioEnabled$);
+  const hasAudio$ = useBehavior(
+    currentMedia?.audioEnabled$ ? currentMedia.audioEnabled$ : constant(false),
+  );
   const isLocalScreenShare =
     currentMedia instanceof ScreenShareViewModel && currentMedia.local;
   const screenShareLocallyMuted = useBehavior(
