@@ -241,6 +241,8 @@ export const SpotlightTile: FC<Props> = ({
   const currentMedia = media[visibleIndex];
   const isScreenShare = currentMedia instanceof ScreenShareViewModel;
   const hasAudio$ = useBehavior(currentMedia.audioEnabled$);
+  const isLocalScreenShare =
+    currentMedia instanceof ScreenShareViewModel && currentMedia.local;
   const screenShareLocallyMuted = useBehavior(
     isScreenShare ? currentMedia.locallyMuted$ : constant(false),
   );
@@ -356,36 +358,42 @@ export const SpotlightTile: FC<Props> = ({
         ))}
       </div>
       <div className={styles.bottomRightButtons}>
-        {/* Show volume slider only when the tile is a screenshare, has audio, and is in spotlight mode */}
-        {isScreenShare && hasAudio$ && onToggleExpanded && (
-          <div className={classNames(styles.volumeContainer)}>
-            <ScreenShareVolumeIcon
-              aria-hidden
-              cursor="pointer"
-              width={20}
-              height={20}
-              onPointerDown={() => currentMedia.toggleLocallyMuted()}
-            />
-            {/*
+        {/*
+          Show volume slider only when the tile is a screenshare, has audio,
+          is in spotlight mode, and isn't your own screen share.
+        */}
+        {isScreenShare &&
+          hasAudio$ &&
+          onToggleExpanded &&
+          !isLocalScreenShare && (
+            <div className={classNames(styles.volumeContainer)}>
+              <ScreenShareVolumeIcon
+                aria-hidden
+                cursor="pointer"
+                width={20}
+                height={20}
+                onPointerDown={() => currentMedia.toggleLocallyMuted()}
+              />
+              {/*
                 Update the slider's "key" upon resizing the window to remake
                 the slider instead of reusing it, or else it bugs out
                 and becomes visually desynced (only the width matters)
                 Also onPointerUp is needed to actually commit the volume
               */}
-            <Slider
-              key={targetWidth}
-              label="Screen Share Volume"
-              value={screenShareVolume}
-              min={0}
-              max={1}
-              step={0.01}
-              onValueChange={(v) => currentMedia.setLocalVolume(v)}
-              onValueCommit={() => currentMedia.commitLocalVolume()}
-              className={classNames(styles.volumeSlider)}
-              onPointerUp={() => currentMedia.commitLocalVolume()}
-            />
-          </div>
-        )}
+              <Slider
+                key={targetWidth}
+                label="Screen Share Volume"
+                value={screenShareVolume}
+                min={0}
+                max={1}
+                step={0.01}
+                onValueChange={(v) => currentMedia.setLocalVolume(v)}
+                onValueCommit={() => currentMedia.commitLocalVolume()}
+                className={classNames(styles.volumeSlider)}
+                onPointerUp={() => currentMedia.commitLocalVolume()}
+              />
+            </div>
+          )}
         <button
           className={classNames(styles.expand)}
           aria-label={"maximise"}
